@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Data Search</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        body {
+            background-color: #f2f2f2;
+            font-family: Arial, sans-serif;
+        }
+        
+        .container {
+            background-color: #ffffff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        h2 {
+            text-align: center;
+            color: #e12084;
+        }
+        
+        .content-container {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+        }
+        
+        .search-box {
+            text-align: center;
+        }
+        
+        #search_text {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 25px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s ease-in-out;
+        }
+        
+        #search_text:focus {
+            border-color: #4b83bf;
+        }
+        
+        #search_button {
+            background-color: #ff9900;
+            color: #4f2626;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+        
+        #search_button:hover {
+            background-color: #ff8c00;
+        }
+        
+        .search-results {
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="content-container">
+            <h2>Employee Data Search</h2>
+            <div class="search-box">
+                <input type="text" name="search_text" id="search_text" class="form-control" placeholder="Search for products...">
+                <button type="button" id="search_button">Search</button>
+                <div id="suggestion-box"></div>
+            </div>
+            <div class="filter-box">
+                <label for="filter">Filter by:</label>
+                <select id="filter">
+                    <option value="name">Name</option>
+                    <option value="email">Email</option>
+                    <option value="phone">Phone</option>
+                </select>
+                <label for="sort">Sort by:</label>
+                <select id="sort">
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                </select>
+            </div>
+
+            <div class="search-results" id="result"></div>
+        </div>
+
+    </div>
+
+
+
+    <script>
+        $(document).ready(function() {
+            load_data();
+
+            function load_data(query) {
+                $.ajax({
+                    url: "/search",
+                    method: "POST",
+                    data: {
+                        query: query
+                    },
+                    success: function(data) {
+                        $('#result').html(data);
+                        $("#result").append(data.htmlresponse);
+                    }
+                });
+
+                function load_suggestions(query) {
+                    $.ajax({
+                        url: "/suggest",
+                        method: "POST",
+                        data: {
+                            query: query
+                        },
+                        success: function(data) {
+                            $('#suggestion-box').html(data);
+                        }
+                    });
+                }
+
+
+                $('#search_text').keyup(function(event) {
+                    if (event.keyCode === 13) {
+                        search();
+                    } else {
+                        var search = $(this).val();
+                        if (search != '') {
+                            load_suggestions(search);
+                        } else {
+                            $('#suggestion-box').html('');
+                        }
+                    }
+                });
+            }
+
+            function search() {
+                var search = $('#search_text').val();
+                if (search != '') {
+                    load_data(search);
+                } else {
+                    load_data();
+                }
+            }
+
+            $('#search_text').keyup(function(event) {
+                if (event.keyCode === 13) {
+
+                    search();
+                }
+            });
+
+            $('#search_button').click(function() {
+                search();
+            });
+        });
+
+        $(document).ready(function() {
+            load_data();
+
+            function load_data(query, filter, sort) {
+                $.ajax({
+                    url: "/search",
+                    method: "POST",
+                    data: {
+                        query: query,
+                        filter: filter,
+                        sort: sort
+                    },
+                    success: function(data) {
+                        $('#result').html(data);
+                        $("#result").append(data.htmlresponse);
+                    }
+                });
+            }
+
+            $('#filter, #sort').change(function() {
+                var filter = $('#filter').val();
+                var sort = $('#sort').val();
+                var search = $('#search_text').val();
+                load_data(search, filter, sort);
+            });
+
+
+        });
+    </script>
+</body>
+
+</html>
